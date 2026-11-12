@@ -1,18 +1,16 @@
-"""
-Reference remediation version.
-For the live exercise, first run the root vulnerable app and show findings.
-Then copy this file over the root app.py and apply the secure templates noted
-in secure-solution/README.md. The vulnerable starter file is intentionally
-kept in the repository so students can compare the two implementations.
-"""
 import os
 import sqlite3
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY")
-if not app.secret_key:
-    raise RuntimeError("Set FLASK_SECRET_KEY before starting the secure app")
+
+# INTENTIONALLY INSECURE FOR THE WORKSHOP:
+# Gitleaks should flag this fake-looking demo credential.
+# Never put real credentials in source code.
+DEMO_API_TOKEN = "ghp_123456789012345678901234567890123456"
+
+# INTENTIONALLY WEAK FOR THE WORKSHOP. Replace with an environment variable.
+app.secret_key = "devsecops-demo-secret"
 
 DB_PATH = os.environ.get("DB_PATH", "workshop.db")
 
@@ -43,6 +41,16 @@ def initialize_database():
             "INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
             ("student", "Password123!")
         )
+        count = db.execute("SELECT COUNT(*) AS count FROM products").fetchone()["count"]
+        if count == 0:
+            db.executemany(
+                "INSERT INTO products (name, description) VALUES (?, ?)",
+                [
+                    ("Laptop", "A lightweight demo laptop"),
+                    ("Keyboard", "A mechanical demo keyboard"),
+                    ("Monitor", "A 24-inch demo monitor"),
+                ],
+            )
 
 
 @app.route("/")
@@ -56,23 +64,33 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
+
+        # INTENTIONALLY VULNERABLE:
+        # User input is concatenated directly into SQL (SQL injection).
+        query = (
+            "SELECT * FROM users WHERE username = '"
+            + username
+            + "' AND password = '"
+            + password
+            + "'"
+        )
         with get_db() as db:
-            user = db.execute(
-                "SELECT * FROM users WHERE username = ? AND password = ?",
-                (username, password),
-            ).fetchone()
+            user = db.execute(query).fetchone()
+
         if user:
             session["username"] = user["username"]
             return redirect(url_for("dashboard"))
         message = "Invalid username or password"
+
     return render_template("login.html", message=message)
 
 
 @app.route("/search")
 def search():
     term = request.args.get("q", "")
-    # Jinja auto-escapes untrusted input by default. Do not use |safe here.
-    return render_template("search.html", term=term)
+    # INTENTIONALLY VULNERABLE:
+    # The template renders this value as trusted HTML (XSS).
+    return render_template("search.html", term=term, unsafe=True)
 
 
 @app.route("/dashboard")
@@ -95,4 +113,5 @@ def logout():
 
 if __name__ == "__main__":
     initialize_database()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=False)
+    # Debug mode is intentionally enabled for the workshop finding.
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=True)
