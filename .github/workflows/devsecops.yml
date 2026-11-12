@@ -3,9 +3,9 @@ name: End-to-End DevSecOps Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [test]
   pull_request:
-    branches: [main]
+    branches: [test]
   workflow_dispatch:
 
 permissions:
