@@ -8,7 +8,7 @@
   </form>
   <p>Search results for:</p>
   <!-- INTENTIONALLY VULNERABLE: safe=False disables Jinja auto-escaping. -->
-  <div class="result">{{ term | safe }}</div>
+  <div class="result">{{ term }}</div>
   <p class="hint">Workshop exercise: inspect how untrusted input is displayed.</p>
 </section>
 {% endblock %}
