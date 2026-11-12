@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <h1>Product search</h1>
+  <form method="get" action="{{ url_for('search') }}">
+    <label>Search term<input name="q" value="{{ term }}"></label>
+    <button type="submit">Search</button>
+  </form>
+  <p>Search results for:</p>
+  <!-- INTENTIONALLY VULNERABLE: safe=False disables Jinja auto-escaping. -->
+  <div class="result">{{ term | safe }}</div>
+  <p class="hint">Workshop exercise: inspect how untrusted input is displayed.</p>
+</section>
+{% endblock %}

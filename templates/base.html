@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or "SecureShop Demo" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="{{ url_for('index') }}">SecureShop</a>
+    <div>
+      <a href="{{ url_for('search') }}">Search</a>
+      <a href="{{ url_for('login') }}">Login</a>
+      {% if session.get("username") %}<a href="{{ url_for('logout') }}">Logout</a>{% endif %}
+    </div>
+  </nav>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer>DevSecOps workshop demo · Never use this demo with real user data</footer>
+</body>
+</html>

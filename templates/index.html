@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <span class="eyebrow">AWS Student Builder Group · Hands-on lab</span>
+  <h1>Build it. Test it. Secure it.</h1>
+  <p>A deliberately vulnerable sample shop for learning how security checks fit into a CI/CD pipeline.</p>
+  {% if username %}<p class="success">Signed in as {{ username }}</p>{% endif %}
+  <div class="actions">
+    <a class="button" href="{{ url_for('login') }}">Try the login</a>
+    <a class="button secondary" href="{{ url_for('search') }}?q=keyboard">Search products</a>
+  </div>
+</section>
+<section class="cards">
+  <article><h2>Plan</h2><p>Think about threats before shipping features.</p></article>
+  <article><h2>Code</h2><p>Write code and review it for common weaknesses.</p></article>
+  <article><h2>Ship safely</h2><p>Scan dependencies and containers before deployment.</p></article>
+</section>
+{% endblock %}
