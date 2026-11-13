@@ -94,7 +94,7 @@ jobs:
           docker build -t "$IMAGE" .
 
       - name: Scan Docker Image
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
           format: table
