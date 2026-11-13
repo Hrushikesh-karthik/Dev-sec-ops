@@ -12,7 +12,7 @@ from flask import Flask, redirect, render_template, request, session, url_for
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 if not app.secret_key:
-    raise RuntimeError("Set FLASK_SECRET_KEY before starting the secure app...")
+    raise RuntimeError("Set FLASK_SECRET_KEY before starting the secure app")
 
 DB_PATH = os.environ.get("DB_PATH", "workshop.db")
 
