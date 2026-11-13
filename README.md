@@ -160,7 +160,4 @@ ZAP baseline performs passive checks. It does not prove the application is secur
 - This sample uses plaintext demo passwords to keep the SQL injection demonstration simple. Real authentication must use secure password hashing, rate limiting, CSRF protection and other controls.
 - A production deployment needs TLS, secure secret management, least-privilege IAM, hardened infrastructure, backups and ongoing monitoring.
 
-docker run --rm \
-  -t ghcr.io/zaproxy/zaproxy:stable \
-  zap-baseline.py \
-  -t http://YOUR_EC2_PUBLIC_IP:5000
+docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://43.204.233.186:5000
