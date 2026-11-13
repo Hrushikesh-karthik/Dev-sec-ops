@@ -1,0 +1,2 @@
+docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://43.204.233.186:5000
+python3 -m http.server 8080
