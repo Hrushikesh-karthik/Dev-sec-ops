@@ -1,0 +1,16 @@
+replicaCount: 2
+
+image:
+  repository: uhkarthik/flask-cicd
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: flask-app.local
