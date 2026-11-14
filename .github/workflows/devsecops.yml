@@ -4,6 +4,9 @@ name: End-to-End DevSecOps Pipeline
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'helm/**'
+      - 'README.md'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -55,23 +58,22 @@ jobs:
 
   tests:
     name: Application Tests
+    runs-on: ubuntu-latest
     env:
       FLASK_SECRET_KEY: test-secret-key
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run Tests
-        run: |
-          python -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -v
 
   build-and-push:
     name: Docker Build and Publish
@@ -90,13 +92,13 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          IMAGE="${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${GITHUB_SHA}"
+          IMAGE="${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ github.run_id }}"
           docker build -t "$IMAGE" .
 
       - name: Scan Docker Image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ github.run_id }}
           format: table
           severity: CRITICAL,HIGH
           exit-code: "1"
@@ -110,20 +112,35 @@ jobs:
       - name: Push Image to Docker Hub
         run: |
           IMAGE="${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}"
-          docker push "$IMAGE:${GITHUB_SHA}"
+          docker push "$IMAGE:${{ github.run_id }}"
 
-      - name: Update Kubernetes Image Tag
+  update-helm:
+    name: Update Helm Chart
+    runs-on: ubuntu-latest
+
+    needs:
+      - build-and-push
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Helm Image Tag
         run: |
-          IMAGE="${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_REPOSITORY }}:${GITHUB_SHA}"
+          sed -i 's/tag: .*/tag: "${{ github.run_id }}"/' helm/flask-app/values.yaml
 
-          sed -i "s|image: .*|image: ${IMAGE}|" k8s/deployment.yaml
-
+      - name: Commit Helm Change
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add k8s/deployment.yaml
+          git add helm/flask-app/values.yaml
 
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: update deployment image [skip ci]"
+          if git diff --cached --quiet; then
+            echo "No Helm changes to commit"
+          else
+            git commit -m "Update Flask image to ${{ github.run_id }}"
             git push
           fi
